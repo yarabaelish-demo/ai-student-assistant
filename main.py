@@ -40,5 +40,23 @@ async def chat(request: ChatRequest):
     prompt = f"{DEFAULT_SYSTEM_PROMPT}\n\n{database_content}\n\nUser message: {request.message}"
     
     response = model.generate_content(prompt)
+
+    if not is_safe(response.text):
+        return {"message": "I'm sorry, I can't respond to that."}
     
     return {"message": response.text}
+
+
+def is_safe(text: str) -> bool:
+    prompt = f"""Is the following text harmful, unethical, racist, sexist, toxic, dangerous, or illegal?
+    Respond with only "YES" or "NO".
+
+    Text: "{text}"
+    """
+    response = model.generate_content(prompt)
+    decision = response.text.strip().upper()
+    if decision == "YES":
+        return False
+    if decision == "NO":
+        return True
+    return False
